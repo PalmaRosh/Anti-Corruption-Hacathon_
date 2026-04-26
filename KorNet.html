@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KorNet</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f4f9; color: #1e293b; min-height: 100vh; }
+
+.page { display: none; }
+.page.active { display: block; min-height: 100vh; }
+
+/* ===== UZEX HEADER ===== */
+.uzex-header {
+  background: #1e2530; color: white; padding: 14px 32px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 3px solid #f6911d;
+}
+.uzex-logo { display: flex; align-items: center; gap: 12px; }
+.uzex-logo-icon {
+  width: 38px; height: 38px; background: white; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #1e2530; font-weight: 900; font-size: 18px;
+}
+.uzex-logo-text { line-height: 1.2; font-weight: 800; font-size: 12px; }
+.uzex-logo-text span { color: #f6911d; }
+.uzex-header-right { display: flex; align-items: center; gap: 24px; }
+.uzex-phone div:first-child { font-weight: 700; font-size: 13px; }
+.uzex-phone div:last-child { font-size: 10px; color: #94a3b8; text-align: right; }
+.uzex-login {
+  background: #f6911d; padding: 8px 18px; border-radius: 4px;
+  font-weight: 700; font-size: 12px; cursor: pointer;
+}
+
+/* ===== UZEX NAV ===== */
+.uzex-nav { background: #2d3748; padding: 0 32px; display: flex; gap: 0; }
+.uzex-nav a {
+  padding: 11px 18px; color: #94a3b8; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; cursor: pointer; border-bottom: 3px solid transparent;
+  display: block; text-decoration: none; transition: color 0.15s;
+}
+.uzex-nav a.active { color: white; border-bottom-color: #f6911d; }
+.uzex-nav a:hover { color: #e2e8f0; }
+
+/* ===== MAIN LAYOUT ===== */
+.main-layout { display: flex; min-height: calc(100vh - 85px); }
+.sidebar { width: 200px; background: white; border-right: 1px solid #e2e8f0; flex-shrink: 0; }
+.sidebar-item {
+  padding: 14px 20px; font-size: 13px; color: #4a5568; cursor: pointer;
+  border-right: 3px solid transparent; display: flex; align-items: center;
+  gap: 8px; transition: all 0.15s;
+}
+.sidebar-item:hover { background: #f8fafc; }
+.sidebar-item.active { background: #fff8f2; color: #f6911d; border-right-color: #f6911d; font-weight: 700; }
+.content { flex: 1; padding: 20px 28px; }
+.section-title { font-weight: 600; color: #475569; font-size: 14px; margin-bottom: 16px; }
+
+/* ===== LOT CARDS ===== */
+.lot-card {
+  background: white; border-radius: 8px; border: 1px solid #e2e8f0;
+  margin-bottom: 10px; padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.lot-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 20px; align-items: start; }
+.lot-label { color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; margin-bottom: 3px; letter-spacing: 0.5px; }
+.lot-val { color: #1e293b; font-weight: 700; font-size: 13px; line-height: 1.3; }
+.lot-inn { color: #64748b; font-size: 11px; margin-top: 4px; }
+.winner-inn { color: #10b981; font-weight: 800; font-size: 14px; }
+.lot-actions {
+  display: flex; gap: 8px; margin-top: 12px;
+  padding-top: 12px; border-top: 1px solid #f1f5f9;
+}
+
+/* ===== BUTTONS ===== */
+.btn {
+  padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1px solid #e2e8f0; background: #f8fafc;
+  color: #475569; transition: all 0.15s;
+}
+.btn:hover { background: #1e293b; color: white; border-color: #1e293b; }
+.btn-primary { background: #1e293b; color: white; border-color: #1e293b; }
+.btn-primary:hover { background: #f6911d; border-color: #f6911d; }
+.btn-back {
+  display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px;
+  border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1px solid #e2e8f0; background: white; color: #475569;
+  margin-bottom: 20px; transition: all 0.15s;
+}
+.btn-back:hover { background: #f1f5f9; }
+
+/* ===== ANALYSIS PAGE ===== */
+.analysis-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+.graph-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; }
+.graph-header {
+  padding: 16px 20px; border-bottom: 1px solid #f1f5f9;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.graph-title { font-weight: 700; font-size: 14px; color: #1e293b; }
+#graph-svg { width: 100%; height: 460px; background: #fafbfc; display: block; }
+
+/* Risk Panel */
+.risk-panel { display: flex; flex-direction: column; gap: 14px; }
+.risk-alert {
+  background: #fff5f5; border-left: 4px solid #ef4444;
+  border-radius: 0 8px 8px 0; padding: 16px;
+}
+.risk-alert-title { color: #ef4444; font-weight: 800; font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+.risk-alert-body { font-size: 12px; color: #64748b; line-height: 1.6; }
+.risk-connections { background: white; border-radius: 8px; border: 1px solid #e2e8f0; padding: 16px; }
+.conn-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 1px solid #f8fafc; font-size: 12px;
+}
+.conn-item:last-child { border-bottom: none; }
+.conn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.conn-text { color: #475569; flex: 1; }
+.conn-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+
+/* ===== IHAMKOR PAGE ===== */
+.ih-header {
+  background: white; padding: 16px 32px; border-bottom: 1px solid #e2e8f0;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.ih-logo { font-size: 22px; font-weight: 900; color: #1e3a8a; }
+.ih-logo span { color: #f6911d; }
+.ih-nav { display: flex; gap: 16px; align-items: center; }
+.ih-nav a { font-size: 13px; font-weight: 700; color: #1e3a8a; cursor: pointer; text-decoration: none; }
+.ih-nav .ih-btn {
+  background: #1e3a8a; color: white; padding: 8px 18px;
+  border-radius: 6px; font-size: 12px;
+}
+.ih-content { padding: 28px 32px; background: #f8fafc; min-height: calc(100vh - 60px); }
+.ih-search {
+  background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: 12px 18px; display: flex; justify-content: space-between;
+  align-items: center; color: #94a3b8; font-size: 14px; margin-bottom: 24px;
+}
+
+/* iHamkor Main Card */
+.ih-main-card {
+  background: white; border-radius: 14px; border: 1px solid #e2e8f0;
+  padding: 30px; display: grid; grid-template-columns: 1fr 300px;
+  gap: 0; margin-bottom: 20px;
+}
+.ih-divider { border-left: 1px solid #f1f5f9; padding-left: 30px; }
+.ih-status-badge {
+  display: inline-block; background: #e6f9f1; color: #059669;
+  padding: 4px 12px; border-radius: 20px; font-size: 11px;
+  font-weight: 800; margin-left: 12px; vertical-align: middle;
+}
+.ih-inn { font-weight: 900; font-size: 30px; color: #1e293b; }
+.ih-info-line { margin-bottom: 6px; font-size: 13px; }
+.ih-info-line .lbl { color: #94a3b8; font-size: 12px; }
+.ih-info-line .val { color: #1e293b; }
+.ih-rating-label { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.ih-grade { font-size: 52px; font-weight: 900; color: #1e293b; line-height: 1; }
+.ih-grade span { font-size: 22px; color: #ef4444; margin-left: 8px; }
+.ih-trust { color: #ef4444; font-weight: 700; font-size: 13px; margin-top: 4px; }
+.ih-note {
+  background: #f8fafc; padding: 14px; border-radius: 8px;
+  margin-top: 16px; font-size: 12px; color: #64748b; line-height: 1.6;
+}
+
+/* iHamkor Stats */
+.ih-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.ih-stat-card { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 18px; }
+.ih-stat-label { font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
+.ih-stat-val { font-size: 22px; font-weight: 900; color: #1e293b; }
+.ih-stat-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+
+/* iHamkor Founders */
+.ih-section-card { background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 18px; margin-bottom: 16px; }
+.ih-section-card h4 { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #f1f5f9; }
+.founder-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid #f8fafc;
+}
+.founder-row:last-child { border-bottom: none; }
+.founder-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px; flex-shrink: 0;
+}
+.founder-name { font-size: 13px; font-weight: 600; color: #1e293b; }
+.founder-role { font-size: 11px; color: #94a3b8; }
+.founder-share { margin-left: auto; font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; }
+.red-flag {
+  margin-left: 8px; background: #fff5f5; color: #ef4444;
+  font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;
+}
+
+/* iHamkor Warning */
+.ih-warning {
+  background: #fff5f5; border: 1px solid #fca5a5; border-radius: 10px;
+  padding: 18px; display: flex; gap: 14px; align-items: flex-start;
+}
+.ih-warning-icon {
+  width: 36px; height: 36px; background: #ef4444; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 18px; flex-shrink: 0; font-weight: 900;
+}
+.ih-warning h4 { color: #ef4444; font-weight: 800; font-size: 13px; margin-bottom: 6px; }
+.ih-warning p { font-size: 12px; color: #64748b; line-height: 1.6; }
+
+/* Contract history table */
+.contract-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.contract-table th { background: #f8fafc; padding: 10px 12px; text-align: left; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+.contract-table td { padding: 10px 12px; border-bottom: 1px solid #f8fafc; color: #1e293b; }
+.contract-table tr:last-child td { border-bottom: none; }
+.contract-table tr:hover td { background: #fafafa; }
+.status-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+
+/* ===== LOADING OVERLAY ===== */
+.loading-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: #0a0e1a; z-index: 9999;
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 0.4s ease;
+}
+.loading-overlay.fade-out { opacity: 0; pointer-events: none; }
+.loading-logo { width: 180px; margin-bottom: 32px; animation: logoIn 0.6s ease forwards; opacity: 0; }
+@keyframes logoIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.loading-bar-wrap { width: 200px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-bottom: 16px; }
+.loading-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #3b5998, #7ab3d4); border-radius: 2px; transition: width 0.05s linear; }
+.loading-text { font-size: 12px; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; font-family: 'Segoe UI', system-ui; }
+
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div style="color:white; font-size:24px; font-weight:900; margin-bottom:20px;">KORNET</div>
+  <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+  <div class="loading-text" id="loading-text">Инициализация...</div>
+</div>
+
+
+<!-- =============================== PAGE: UZEX =============================== -->
+<div id="page-uzex" class="page active">
+  <div class="uzex-header">
+    <div class="uzex-logo">
+      <div class="uzex-logo-icon">U</div>
+      <div class="uzex-logo-text">
+        KorNet<br>
+        <span></span>
+      </div>
+    </div>
+    <div class="uzex-header-right">
+      <div class="uzex-phone">
+        <div></div>
+        <div>Помощь 24/7</div>
+      </div>
+      <div class="uzex-login">ВОЙТИ</div>
+    </div>
+  </div>
+
+  <div class="uzex-nav">
+    <a href="#">Главная</a>
+    <a href="#">О портале</a>
+    <a href="#" class="active">Торги</a>
+    <a href="#">Товары</a>
+    <a href="#">Контакты</a>
+  </div>
+
+  <div class="main-layout">
+    <div class="sidebar">
+      <div class="sidebar-item active">⚡ Аукцион</div>
+      <div class="sidebar-item">🛒 Эл. тендер</div>
+      <div class="sidebar-item">📋 Прямые закупки</div>
+      <div class="sidebar-item">📊 Статистика</div>
+      <div class="sidebar-item">📁 Архив</div>
+    </div>
+    <div class="content">
+      <div class="section-title">Реестр завершённых лотов — Аукцион</div>
+      <div id="lots-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================== PAGE: ANALYSIS =============================== -->
+<div id="page-analysis" class="page">
+  <div class="uzex-header">
+    <div class="uzex-logo">
+      <div class="uzex-logo-icon">U</div>
+      <div class="uzex-logo-text">
+        <br>
+        <span>KorNet</span>
+      </div>
+    </div>
+    <div class="uzex-header-right">
+      <div style="font-size:12px; color:#94a3b8;">Модуль анализа аффилированности</div>
+    </div>
+  </div>
+
+  <div class="content" style="padding: 24px 32px;">
+    <button class="btn-back" onclick="showLoadingAndNavigate('uzex', null)">&#8592; Назад к списку</button>
+    <div id="analysis-title" style="font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 20px;"></div>
+
+    <div class="analysis-layout">
+      <!-- Graph -->
+      <div class="graph-container">
+        <div class="graph-header">
+          <div class="graph-title">Граф связей компании</div>
+          <div style="font-size:12px; color:#94a3b8;">Интерактивная карта аффилированности</div>
+        </div>
+        <svg id="graph-svg"></svg>
+        <div style="padding: 12px 20px; border-top: 1px solid #f1f5f9; display: flex; gap: 20px; font-size: 11px; color: #64748b;">
+          <span>Победитель</span>
+          <span>Учредитель</span>
+          <span>Заказчик</span>
+          <span>Сотрудник</span>
+          <span>Аффилированная компания</span>
+        </div>
+      </div>
+
+      <!-- Risk Panel -->
+      <div class="risk-panel">
+        <div class="risk-alert">
+          <div class="risk-alert-title">Конфликт интересов выявлен</div>
+          <div class="risk-alert-body">
+            Обнаружена прямая связь между победителем тендера и сотрудником организации заказчика через родственные отношения (братья).
+          </div>
+        </div>
+        <div style="font-size:11px; color:#94a3b8; margin-top:4px;">Критический уровень — требуется проверка</div>
+
+        <div class="risk-connections">
+          <div style="font-size:12px; font-weight:700; color:#1e293b; margin-bottom:10px;">Выявленные связи</div>
+          <div class="conn-item">
+            <div class="conn-dot" style="background:#ef4444"></div>
+            <div class="conn-text">Родство с сотрудником заказчика</div>
+            <div class="conn-badge" style="background:#fff5f5; color:#ef4444;">Высокий</div>
+          </div>
+          <div class="conn-item">
+            <div class="conn-dot" style="background:#f59e0b"></div>
+            <div class="conn-text">Совпадение юридического адреса</div>
+            <div class="conn-badge" style="background:#fffbeb; color:#d97706;">Средний</div>
+          </div>
+          <div class="conn-item">
+            <div class="conn-dot" style="background:#f59e0b"></div>
+            <div class="conn-text">Общий учредитель (2 фирмы)</div>
+            <div class="conn-badge" style="background:#fffbeb; color:#d97706;">Средний</div>
+          </div>
+          <div class="conn-item">
+            <div class="conn-dot" style="background:#94a3b8"></div>
+            <div class="conn-text">Аналогичные виды деятельности</div>
+            <div class="conn-badge" style="background:#f8fafc; color:#64748b;">Низкий</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" style="width:100%; padding:12px; font-size:13px;"
+          onclick="openIhamkor()">
+          📊 Открыть полное досье iHamkor
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =============================== PAGE: IHAMKOR =============================== -->
+<div id="page-ihamkor" class="page">
+  <div class="ih-header">
+    <div class="ih-logo">iHamkor<span>.</span>Index</div>
+    <div class="ih-nav">
+      <a href="#">Рейтинги</a>
+      <a href="#">Проверка</a>
+      <a href="#">API</a>
+      <a href="#" class="ih-btn">Личный кабинет</a>
+    </div>
+  </div>
+
+  <div class="ih-content">
+    <button class="btn-back" onclick="showLoadingAndNavigate('analysis', function(){ drawGraph(); })">&#8592; Вернуться к анализу</button>
+
+    <div class="ih-search">
+      <span id="ih-search-text">Поиск по ИНН...</span>
+      <span></span>
+    </div>
+
+    <!-- Main info card -->
+    <div class="ih-main-card">
+      <div>
+        <div style="margin-bottom: 18px;">
+          <div class="ih-rating-label" style="margin-bottom:4px;">ИНН ОРГАНИЗАЦИИ</div>
+          <span class="ih-inn" id="ih-inn-display"></span>
+          <span class="ih-status-badge">✓ АКТИВЕН</span>
+        </div>
+        <div class="ih-info-line"><span class="lbl">ОКЭД: </span><span class="val">94990 — Прочие членские организации</span></div>
+        <div class="ih-info-line"><span class="lbl">Адрес: </span><span class="val">г. Ташкент, Яккасарайский р-н, ул. Каххара, 45</span></div>
+        <div class="ih-info-line"><span class="lbl">Руководитель: </span><span class="val" style="font-weight:600;">Abdullayev Rustamxon Sulton o'g'li</span></div>
+        <div class="ih-info-line"><span class="lbl">Дата регистрации: </span><span class="val">12.03.2019</span></div>
+        <div class="ih-info-line"><span class="lbl">Уставной капитал: </span><span class="val">50 000 000 сум</span></div>
+        <div class="ih-info-line"><span class="lbl">Форма собственности: </span><span class="val">ООО (частная)</span></div>
+      </div>
+
+      <div class="ih-divider">
+        <div class="ih-rating-label">Индекс надёжности iHamkor</div>
+        <div class="ih-grade">D <span>19.2</span></div>
+        <div class="ih-trust">⚠ НИЗКИЙ УРОВЕНЬ ТРАСТА</div>
+        <div class="ih-note">
+          Рейтинг занижен из-за отсутствия финансовых отчётов за 2024 год и связей с «красными» контрагентами. Зафиксированы 2 активных судебных иска.
+        </div>
+        <div style="margin-top:16px; font-size:11px; color:#94a3b8;">Дата обновления рейтинга: 23.04.2026</div>
+      </div>
+    </div>
+
+    <!-- Stats grid -->
+    <div class="ih-cards-grid">
+      <div class="ih-stat-card">
+        <div class="ih-stat-label">Участий в тендерах</div>
+        <div class="ih-stat-val">47</div>
+        <div class="ih-stat-sub">За последние 3 года</div>
+      </div>
+      <div class="ih-stat-card">
+        <div class="ih-stat-label">Выигранных лотов</div>
+        <div class="ih-stat-val" style="color:#10b981;">31</div>
+        <div class="ih-stat-sub">Победы: 66%</div>
+      </div>
+      <div class="ih-stat-card">
+        <div class="ih-stat-label">Судебные иски</div>
+        <div class="ih-stat-val" style="color:#ef4444;">2</div>
+        <div class="ih-stat-sub">Активных производства</div>
+      </div>
+    </div>
+
+    <!-- Founders -->
+    <div class="ih-section-card">
+      <h4>Учредители и аффилированные лица</h4>
+      <div class="founder-row">
+        <div class="founder-avatar" style="background:#e0e7ff; color:#3730a3;">АА</div>
+        <div>
+          <div class="founder-name">Ахмедов Алишер Акбарович</div>
+          <div class="founder-role">Учредитель / Директор</div>
+        </div>
+        <div class="founder-share">100% <span class="red-flag">⚠ СВЯЗЬ</span></div>
+      </div>
+      <div class="founder-row">
+        <div class="founder-avatar" style="background:#fce7f3; color:#9d174d;">АМ</div>
+        <div>
+          <div class="founder-name">Ахмедов Музаффар Акбарович</div>
+          <div class="founder-role">Брат учредителя — сотрудник организации-заказчика</div>
+        </div>
+        <div class="founder-share" style="color:#ef4444;">КОНФЛИКТ</div>
+      </div>
+      <div class="founder-row">
+        <div class="founder-avatar" style="background:#dcfce7; color:#166534;">КС</div>
+        <div>
+          <div class="founder-name">ООО «Komfort Servis»</div>
+          <div class="founder-role">Аффилированная компания (общий юридический адрес)</div>
+        </div>
+        <div class="founder-share" style="color:#64748b; font-weight:600;">ИНН: 304721095</div>
+      </div>
+    </div>
+
+    <!-- Warning block -->
+    <div class="ih-warning">
+      <div class="ih-warning-icon">!</div>
+      <div>
+        <h4>Рекомендация антикоррупционной системы</h4>
+        <p>
+          На основании выявленных связей и низкого индекса надёжности (D/19.2) рекомендуется передать материалы данного лота в антикоррупционное агентство для проверки. Участие данного поставщика в государственных закупках сопряжено с высоким риском нарушения законодательства об аффилированности (статья 22, Закон РУз «О государственных закупках»).
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  DATA
+// ============================================================
+const LOTS = [
+  {
+    inn_z: "542910384",
+    name_z: "Guliston shahar mahalla uyushmasi (11-tip)",
+    date: "24.04.2026 11:12",
+    inn_p: "321213538",
+    sum_s: "1 280 000",
+    sum_k: "1 254 400",
+    skidka: "−2%"
+  },
+  {
+    inn_z: "192837465",
+    name_z: "Андижанский государственный медицинский институт",
+    date: "24.04.2026 11:06",
+    inn_p: "849201374",
+    sum_s: "13 400 000",
+    sum_k: "7 504 000",
+    skidka: "−44%"
+  },
+  {
+    inn_z: "77411002",
+    name_z: "АО «Алмалыкский горно-металлургический комбинат»",
+    date: "24.04.2026 10:45",
+    inn_p: "203948512",
+    sum_s: "106 340 000",
+    sum_k: "51 043 200",
+    skidka: "−52%"
+  },
+  {
+    inn_z: "305928174",
+    name_z: "Сайхунобод туман Ободонлаштириш бошкармаси",
+    date: "24.04.2026 11:10",
+    inn_p: "663029184",
+    sum_s: "1 200 000",
+    sum_k: "552 000",
+    skidka: "−54%"
+  }
+];
+
+let currentLot = null;
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+
+function showLoadingAndNavigate(targetPage, callback) {
+  const overlay = document.getElementById('loading-overlay');
+  const bar = document.getElementById('loading-bar');
+  const txt = document.getElementById('loading-text');
+  overlay.style.display = 'flex';
+  overlay.classList.remove('fade-out');
+  overlay.style.opacity = '1';
+  bar.style.width = '0%';
+
+  const msgs = ['Загрузка...', 'Обработка данных...', 'Формирование отчёта...', 'Готово'];
+  let progress = 0; let msgIdx = 0;
+  txt.textContent = msgs[0];
+
+  const interval = setInterval(() => {
+    progress += 2.5;
+    if (progress > 100) progress = 100;
+    bar.style.width = progress + '%';
+    const ni = Math.min(Math.floor((progress / 100) * (msgs.length - 1)), msgs.length - 1);
+    if (ni !== msgIdx) { msgIdx = ni; txt.textContent = msgs[msgIdx]; }
+    if (progress >= 100) {
+      clearInterval(interval);
+      setTimeout(() => {
+        overlay.classList.add('fade-out');
+        setTimeout(() => {
+          overlay.style.display = 'none';
+          bar.style.width = '0%';
+          showPage(targetPage);
+          if (callback) callback();
+        }, 380);
+      }, 120);
+    }
+  }, 15);
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + id);
+  if (target) target.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+//  RENDER LOT LIST
+// ============================================================
+function renderLots() {
+  const container = document.getElementById('lots-list');
+  container.innerHTML = LOTS.map((lot, i) => `
+    <div class="lot-card">
+      <div class="lot-grid">
+        <div>
+          <div class="lot-label">Заказчик</div>
+          <div class="lot-val">${lot.name_z}</div>
+          <div class="lot-inn">ИНН: ${lot.inn_z}</div>
+        </div>
+        <div>
+          <div class="lot-label">Дата завершения</div>
+          <div class="lot-val">${lot.date}</div>
+          <div style="margin-top:8px;">
+            <div class="lot-label">Победитель ИНН</div>
+            <div class="winner-inn">${lot.inn_p}</div>
+          </div>
+        </div>
+        <div>
+          <div class="lot-label">Стартовая сумма</div>
+          <div class="lot-val">${lot.sum_s} сум</div>
+        </div>
+        <div>
+          <div class="lot-label">Сумма контракта</div>
+          <div class="lot-val" style="color:#10b981;">${lot.sum_k} сум</div>
+          <div style="margin-top:4px; font-size:11px; color:#f59e0b; font-weight:700;">Снижение: ${lot.skidka}</div>
+        </div>
+      </div>
+      <div class="lot-actions">
+        <button class="btn" onclick="openAnalysis(${i})">
+          🔍 Экспресс-анализ связей — ИНН ${lot.inn_p}
+        </button>
+        <button class="btn">📄 История контрактов</button>
+        <button class="btn">📋 Карточка лота</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+//  OPEN ANALYSIS PAGE
+// ============================================================
+function openAnalysis(i) {
+  currentLot = LOTS[i];
+  document.getElementById('analysis-title').innerHTML =
+    '🛡️ Проверка аффилированности: <span style="color:#3b82f6; font-weight:900;">' + currentLot.inn_p + '</span>' +
+    ' &nbsp;<span style="font-size:13px; color:#94a3b8; font-weight:500;">← Победитель тендера</span>';
+  
+  // ИСПРАВЛЕНО: Правильный ID страницы и вызов отрисовки графа
+  showLoadingAndNavigate('analysis', function() {
+      drawGraph();
+  });
+}
+
+// ============================================================
+//  OPEN IHAMKOR PAGE
+// ============================================================
+function openIhamkor() {
+  if (!currentLot) return;
+  document.getElementById('ih-inn-display').textContent = currentLot.inn_p;
+  document.getElementById('ih-search-text').textContent = 'Результат поиска по ИНН ' + currentLot.inn_p;
+  showLoadingAndNavigate('ihamkor', null);
+}
+
+// ============================================================
+//  GRAPH DRAWING LOGIC (SVG)
+// ============================================================
+function drawGraph() {
+  const svgEl = document.getElementById('graph-svg');
+  if (!svgEl) return;
+  
+  const W = svgEl.clientWidth || 700;
+  const H = 460;
+  svgEl.setAttribute('width', W);
+  svgEl.setAttribute('height', H);
+  svgEl.innerHTML = '';
+
+  const ns = 'http://www.w3.org/2000/svg';
+
+  const nodes = [
+    { id:0, label:'Победитель', sub: currentLot ? currentLot.inn_p : '', color:'#3b82f6', r:34, x:W/2,       y:H/2-20 },
+    { id:1, label:'Учредитель', sub:'Ахмедов А.А.',        color:'#ef4444', r:26, x:W/2-200, y:H/2-120 },
+    { id:2, label:'Заказчик',   sub:'Связь выявлена',       color:'#1e293b', r:28, x:W/2+200, y:H/2-100 },
+    { id:3, label:'Ахмедов М.А.',sub:'Брат учредителя',    color:'#f59e0b', r:24, x:W/2+160, y:H/2+130 },
+    { id:4, label:'Komfort Servis',sub:'Аффил. ООО',        color:'#94a3b8', r:22, x:W/2-170, y:H/2+130 },
+  ];
+
+  const links = [
+    { s:0, t:1, label:'Владелец 100%',  color:'#64748b', dashed:false },
+    { s:1, t:2, label:'Братья',          color:'#ef4444', dashed:true  },
+    { s:2, t:3, label:'Сотрудник',       color:'#f59e0b', dashed:false },
+    { s:1, t:3, label:'Тот же человек',  color:'#ef4444', dashed:true  },
+    { s:0, t:4, label:'Общий адрес',     color:'#94a3b8', dashed:false },
+  ];
+
+  function mk(tag, attrs) {
+    const el = document.createElementNS(ns, tag);
+    for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  }
+
+  // Defs for arrows
+  const defs = mk('defs', {});
+  const colorsList = ['#64748b','#ef4444','#f59e0b','#94a3b8'];
+  colorsList.forEach((col, i) => {
+    const marker = mk('marker', { id:'arr'+i, markerWidth:'8', markerHeight:'6', refX:'8', refY:'3', orient:'auto' });
+    const poly = mk('polygon', { points:'0 0, 8 3, 0 6', fill:col });
+    marker.appendChild(poly);
+    defs.appendChild(marker);
+  });
+  svgEl.appendChild(defs);
+
+  const colorIdx = { '#64748b':0, '#ef4444':1, '#f59e0b':2, '#94a3b8':3 };
+
+  // Draw links
+  links.forEach(l => {
+    const sn = nodes[l.s], tn = nodes[l.t];
+    const dx = tn.x - sn.x, dy = tn.y - sn.y;
+    const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+    const x1 = sn.x + dx/dist * sn.r;
+    const y1 = sn.y + dy/dist * sn.r;
+    const x2 = tn.x - dx/dist * (tn.r + 12);
+    const y2 = tn.y - dy/dist * (tn.r + 12);
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    const ci = colorIdx[l.color] ?? 0;
+
+    const line = mk('line', { x1, y1, x2, y2, stroke:l.color, 'stroke-width':l.dashed?1.5:1.8,
+      opacity:'0.85', 'marker-end':'url(#arr'+ci+')',
+      ...(l.dashed ? {'stroke-dasharray':'5,4'} : {}) });
+    svgEl.appendChild(line);
+
+    const lw = l.label.length * 6 + 14;
+    const bg = mk('rect', { x:mx-lw/2, y:my-10, width:lw, height:18, rx:'4', fill:'white', stroke:'#e2e8f0', 'stroke-width':'0.5' });
+    svgEl.appendChild(bg);
+
+    const lt = mk('text', { x:mx, y:my+4, 'text-anchor':'middle', 'font-size':'9.5', fill:l.color,
+      'font-weight':'600', 'font-family':'Segoe UI,system-ui,sans-serif' });
+    lt.textContent = l.label;
+    svgEl.appendChild(lt);
+  });
+
+  // Draw nodes
+  nodes.forEach(n => {
+    const shadow = mk('circle', { cx:n.x, cy:n.y+2, r:n.r+3, fill:'rgba(0,0,0,0.07)' });
+    svgEl.appendChild(shadow);
+
+    const circle = mk('circle', { cx:n.x, cy:n.y, r:n.r, fill:n.color, stroke:'white', 'stroke-width':'2.5' });
+    svgEl.appendChild(circle);
+
+    const t1 = mk('text', { x:n.x, y:n.sub ? n.y-4 : n.y+4, 'text-anchor':'middle',
+      'font-size':n.r>28?'11':'10', fill:'white', 'font-weight':'700',
+      'font-family':'Segoe UI,system-ui,sans-serif' });
+    t1.textContent = n.label;
+    svgEl.appendChild(t1);
+
+    if (n.sub) {
+      const t2 = mk('text', { x:n.x, y:n.y+10, 'text-anchor':'middle', 'font-size':'9',
+        fill:'rgba(255,255,255,0.85)', 'font-family':'Segoe UI,system-ui,sans-serif' });
+      t2.textContent = n.sub;
+      svgEl.appendChild(t2);
+    }
+  });
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+renderLots();
+
+// Имитация начальной загрузки
+window.addEventListener('load', () => {
+  const overlay = document.getElementById('loading-overlay');
+  const bar = document.getElementById('loading-bar');
+  overlay.style.display = 'flex';
+  
+  let p = 0;
+  const int = setInterval(() => {
+    p += 2;
+    bar.style.width = p + '%';
+    if(p >= 100) {
+      clearInterval(int);
+      setTimeout(() => {
+        overlay.classList.add('fade-out');
+        setTimeout(() => overlay.style.display = 'none', 400);
+      }, 200);
+    }
+  }, 10);
+});
+</script>
+</body>
+</html>
